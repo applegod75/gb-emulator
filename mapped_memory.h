@@ -1,6 +1,8 @@
 #ifndef GB_EMULATOR_MAPPED_MEMORY_H_
 #define GB_EMULATOR_MAPPED_MEMORY_H_
 
+#include "stdint.h"
+
 typedef struct {
     uint8_t* rom_bank_0;
     uint8_t* selected_rom_bank;

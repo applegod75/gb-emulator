@@ -15,6 +15,8 @@ target_sources(gb_emulator PRIVATE
     memory_map.c
     cartridge.c
     cpu.c
+    argparse.c
+    gb_emulator.c
 )
 
 target_link_libraries(gb_emulator PRIVATE SDL3::SDL3)
