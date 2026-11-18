@@ -26,8 +26,19 @@ uint8_t mm_read(State* state, uint16_t address){
 }
 
 void mm_write(State* state, uint16_t address, uint8_t val){
+    // here else if's are actually required because the fn doesn't return after every if statement.
     if (address <= 0x7FFF) dispatchRomWrite(state, address, val);
-    
+    else if (address <= 0x9FFF) state->mem->selected_vram        [(address - 0x8000)] = val;
+    else if (address <= 0xBFFF) state->mem->external_ram         [(address - 0xA000)] = val;
+    else if (address <= 0xCFFF) state->mem->wram                 [(address - 0xC000)] = val;
+    else if (address <= 0xDFFF) state->mem->selected_wram        [(address - 0xD000)] = val;
+    else if (address <= 0xFDFF) mm_write(state, address - 0x2000, val);
+    else if (address <= 0xFE9F) state->mem->OAM                  [(address - 0xFE00)] = val;
+    else if (address <= 0xFEFF) return;
+    /// TODO: implement i/o mappings here
+    else if (address <= 0xFF7F) return;
+    else if (address <= 0xFFFE) state->mem->hram                 [(address - 0xFF80)] = val;
+    else if (address <= 0xFFFF && val == 1) *state->mem->IE = 1;
 }
 
 MappedMemory* mm_create(Cartridge* cartridge){
