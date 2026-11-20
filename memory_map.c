@@ -1,11 +1,19 @@
 #include "memory_map.h"
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdio.h>
 #define ROM_BANK_SIZE (16 * 1024)
 
 void dispatchRomWrite(State* state, uint16_t address, uint8_t val){
     if (address > 0x7FFF) return; // not a rom write
+}
+
+void dispatchIoWrite(State* state, uint16_t address, uint8_t val){
+    if (address > 0xFF70 || address < 0xFF00) return;
+    
+    if (address == 0xFF50 && val != 0) { // unmap bootrom
+        memcpy(state->mem->rom_bank_0, state->loaded_cartridge->data, 0xFF);
+    }
 }
 
 uint8_t mm_read(State* state, uint16_t address){
@@ -36,12 +44,12 @@ void mm_write(State* state, uint16_t address, uint8_t val){
     else if (address <= 0xFE9F) state->mem->OAM                  [(address - 0xFE00)] = val;
     else if (address <= 0xFEFF) return;
     /// TODO: implement i/o mappings here
-    else if (address <= 0xFF7F) return;
+    else if (address <= 0xFF7F) dispatchIoWrite(state, address, val);
     else if (address <= 0xFFFE) state->mem->hram                 [(address - 0xFF80)] = val;
     else if (address <= 0xFFFF && val == 1) *state->mem->IE = 1;
 }
 
-MappedMemory* mm_create(Cartridge* cartridge){
+MappedMemory* mm_create(Cartridge* cartridge){ 
     MappedMemory* rtn = (MappedMemory*)malloc(sizeof(MappedMemory));
     rtn->rom_bank_0 = (uint8_t*)malloc(ROM_BANK_SIZE);
     memcpy(rtn->rom_bank_0, cartridge->data, ROM_BANK_SIZE);

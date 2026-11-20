@@ -1,4 +1,6 @@
 #include "cpu.h"
+#include "instruction_map.h"
+#include "memory_map.h"
 
 uint8_t isBigEndian(){
     int i = 1;
@@ -35,6 +37,10 @@ CpuState* cpu_init(){
     }
 
     return rtn;
+}
+
+void cpu_cycle(State* state){
+    instruction_map[mm_read(state, *state->cpu->PC)](state);
 }
 
 

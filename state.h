@@ -2,7 +2,7 @@
 #define GB_EMULATOR_STATE_H_
 
 #include "cartridge.h"
-#include "cpu.h"
+#include "cpu_state.h"
 #include "mapped_memory.h"
 
 typedef struct {

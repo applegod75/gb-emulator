@@ -1,5 +1,7 @@
 #include "gb_emulator.h"
-
+#include <stdlib.h>
+#include "cpu.h"
+#include <stdio.h>
 
 // this is very beautiful, I'm aware.
 void* bootrom = (void*)(
@@ -25,6 +27,12 @@ State* initGameboy(Args* a){
     State* rtn = (State*)malloc(sizeof(State));
     rtn->cpu = cpu_init();
     rtn->loaded_cartridge = cartridge_load(a->rom_name);
+    
+    if (rtn->loaded_cartridge == NULL){
+        printf("failed to load cartridge\n");
+        return NULL;
+    }
+
     rtn->mem = mm_create(rtn->loaded_cartridge);
     
     if (a->skip_bootrom) {

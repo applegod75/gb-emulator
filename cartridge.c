@@ -63,13 +63,18 @@ uint8_t cartridge_hasExternalRam(CartridgeType v) {
 
 Cartridge* cartridge_load(char* file) {
     FILE* f = fopen(file, "rb");
-    if (f == NULL) return NULL;
+    if (f == NULL) {
+        printf("failed to open cartridge file\n");
+        return NULL;
+    }
     uint64_t file_size = getFileSize(f);
 
     // the most the game boy color could handle was an 8MiB rom
     if (file_size > (uint64_t)1024 * 1024 * 1024 * 8) {
+        printf("rom is too big\n");
         return NULL;
-    } else if (file_size < (uint64_t)32 * 1024) { // minimum rom size
+    } else if (file_size < (uint64_t)16 * 1024) { // minimum rom size
+        printf("rom is too small\n");
         return NULL;
     }
 
@@ -92,28 +97,32 @@ Cartridge* cartridge_load(char* file) {
             case 0x52: rom_actual_size = (uint64_t)(16 * 1024 * 72); break;
             case 0x53: rom_actual_size = (uint64_t)(16 * 1024 * 80); break;
             case 0x54: rom_actual_size = (uint64_t)(16 * 1024 * 96); break;
-            default: return NULL;
+            default: rom_actual_size = 0;
         }
     }
     
-    if (rom_actual_size == 0) return NULL;
+    if (rom_actual_size == 0) {
+        printf("rom size header corrupted\n");
+        return NULL;
+    }
     rtn->rom_size = rom_actual_size;
     
     uint8_t ram_header_size = ((uint8_t*)rtn->data)[0x0149];
     uint64_t ram_actual_size = 0;
     switch (ram_header_size) {
         case 0x00: ram_actual_size = 0;           break;
-        case 0x01: return NULL;
+        case 0x01: printf("ram size header corrupted\n"); return NULL;
         case 0x02: ram_actual_size =   8 * 1024;  break;
         case 0x03: ram_actual_size =  32 * 1024;  break;
         case 0x04: ram_actual_size = 128 * 1024;  break;
         case 0x05: ram_actual_size =  64 * 1024;  break;
-        default: return NULL;
+        default: printf("ram size header corrupted\n"); return NULL;
     }
 
     rtn->ram_size = ram_actual_size;
     uint8_t type = ((uint8_t*)rtn->data)[0x0147];
     if (!isCartridgeType(type)){
+        printf("cartridge type header was corrupted\n");
         return NULL;
     }
 
