@@ -6,6 +6,7 @@
 #include "state.h"
 
 CpuState* cpu_init();
+void cpu_free(CpuState* state);
 void cpu_cycle(State* state);
 
 #endif // GB_EMULATOR_CPU_H_

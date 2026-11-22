@@ -83,6 +83,13 @@ Cartridge* cartridge_load(char* file) {
     fclose(f);
 
     Cartridge* rtn = (Cartridge*)malloc(sizeof(Cartridge));
+   
+    if (file_size < 32 * 1024) {
+        rtn->has_rombank_01 = 0;
+    } else {
+        rtn->has_rombank_01 = 1;
+    }
+
     rtn->data = (void*)buf;
     rtn->cgb_flag = ((uint8_t*)rtn->data)[0x0143];
     rtn->sgb_flag = ((uint8_t*)rtn->data)[0x0146];
@@ -129,4 +136,9 @@ Cartridge* cartridge_load(char* file) {
     rtn->type = (CartridgeType)type;
 
     return rtn;
+}
+
+void cartridge_free(Cartridge* c){
+    free(c->data);
+    free(c);
 }

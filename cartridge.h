@@ -38,12 +38,14 @@ typedef struct {
     uint8_t cgb_flag;
     uint8_t sgb_flag;
     CartridgeType type;
-    uint8_t rom_size;
-    uint8_t ram_size;
+    uint64_t rom_size;
+    uint32_t ram_size;
+    uint8_t has_rombank_01;
 } Cartridge;
 
 uint8_t cartridge_hasExternalRam(CartridgeType type);
 
 Cartridge* cartridge_load(char* file);
+void cartridge_free(Cartridge* c);
 
 #endif // GB_EMULATOR_CARTRIDGE_H_

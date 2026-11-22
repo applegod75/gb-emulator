@@ -43,4 +43,8 @@ void cpu_cycle(State* state){
     instruction_map[mm_read(state, *state->cpu->PC)](state);
 }
 
-
+void cpu_free(CpuState* state){
+    // registers are allocated as contiguous memory, so I can only free
+    // the first register, which will free all of them.
+    free(state->AF);
+}

@@ -18,6 +18,13 @@ target_sources(gb_emulator PRIVATE
     argparse.c
     gb_emulator.c
     instruction_map.c
+    sleep.c
 )
+
+if (MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
 target_link_libraries(gb_emulator PRIVATE SDL3::SDL3)

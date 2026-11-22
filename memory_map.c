@@ -55,7 +55,12 @@ MappedMemory* mm_create(Cartridge* cartridge){
     memcpy(rtn->rom_bank_0, cartridge->data, ROM_BANK_SIZE);
     
     rtn->selected_rom_bank = (uint8_t*)malloc(ROM_BANK_SIZE);
-    memcpy(rtn->selected_rom_bank, (uint8_t*)cartridge->data + ROM_BANK_SIZE, ROM_BANK_SIZE);
+
+    if (cartridge->has_rombank_01) {
+        memcpy(rtn->selected_rom_bank, (uint8_t*)cartridge->data + ROM_BANK_SIZE, ROM_BANK_SIZE);
+    } else {
+        memset(rtn->selected_rom_bank, 0, ROM_BANK_SIZE);
+    }
 
     rtn->selected_vram = (uint8_t*)malloc(8 * 1024);
     memset(rtn->selected_vram, 0, 8 * 1024);
@@ -81,3 +86,16 @@ MappedMemory* mm_create(Cartridge* cartridge){
     rtn->IE = (uint8_t*)malloc(1);
     return rtn;
 }
+
+void mm_free(MappedMemory* mm){
+    free(mm->rom_bank_0);
+    free(mm->selected_rom_bank);
+    free(mm->selected_vram);
+    if (mm->external_ram != NULL) free(mm->external_ram);
+    // selected_wram and wram are in contiguous memory.
+    free(mm->wram);
+    free(mm->OAM);
+    free(mm->hram);
+    free(mm->IE);
+}
+

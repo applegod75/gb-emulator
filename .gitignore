@@ -3,3 +3,6 @@
 **/build/**
 **/debug/**
 compile_commands.json
+*.gb
+*.asm
+*.bat

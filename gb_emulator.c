@@ -25,6 +25,7 @@ void* bootrom = (void*)(
 
 State* initGameboy(Args* a){
     State* rtn = (State*)malloc(sizeof(State));
+    rtn->current_cycle = 0;
     rtn->cpu = cpu_init();
     rtn->loaded_cartridge = cartridge_load(a->rom_name);
     
@@ -48,6 +49,17 @@ State* initGameboy(Args* a){
     } else {
         memcpy(rtn->mem->rom_bank_0, bootrom, 0xFF);
     }
+    
+    rtn->pixel_buf = (Uint32*)malloc(WIDTH * HEIGHT * sizeof(Uint32));
+    memset(rtn->pixel_buf, 0, WIDTH * HEIGHT * sizeof(Uint32));
 
     return rtn;
+}
+
+void freeGameboy(State* state) {
+    cartridge_free(state->loaded_cartridge);
+    free(state->pixel_buf);
+    cpu_free(state->cpu);
+    mm_free(state->mem);
+    free(state);
 }

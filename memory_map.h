@@ -8,6 +8,7 @@
 #include "mapped_memory.h"
 
 MappedMemory* mm_create(Cartridge* cartridge);
+void mm_free(MappedMemory* mm);
 uint8_t mm_read(State* state, uint16_t address);
 void mm_write(State* state, uint16_t address, uint8_t val);
 

@@ -1,6 +1,8 @@
 #ifndef GB_EMULATOR_CPU_STATE_H_
 #define GB_EMULATOR_CPU_STATE_H_
 
+#include <stdint.h>
+
 typedef struct {
     uint16_t* AF; uint8_t* A;
     uint16_t* BC; uint8_t* B; uint8_t* C;
