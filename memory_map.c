@@ -84,6 +84,7 @@ MappedMemory* mm_create(Cartridge* cartridge){
     memset(rtn->hram, 0, 0x7E);
 
     rtn->IE = (uint8_t*)malloc(1);
+    *rtn->IE = 0;
     return rtn;
 }
 

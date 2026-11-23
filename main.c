@@ -42,15 +42,13 @@ int main(int argc, char** argv){
     SDL_Event event;
     
     state->start_time = SDL_GetTicksNS();
-
+    printf("init time: %llums\n", SDL_GetTicks());
     while (running) {
-        while (SDL_PollEvent(&event)){
-            if (event.type == SDL_EVENT_QUIT) running = 0; 
-        }
 //        printf("0x%X | 0x%X\n", *state->cpu->PC, mm_read(state, *state->cpu->PC));
         cpu_cycle(state);
 //        printState(state);
 
+        if (*state->cpu->PC == 16 * 1024) return 0;
     }
 
     SDL_DestroyTexture(tex);

@@ -23,15 +23,29 @@ Args* parseArgs(int argc, char** argv){
     }
 
     rtn->rom_name = argv[argc - 1];
-    if (argc == 2) return rtn;
+    rtn->bootrom_name = NULL;
+    rtn->skip_bootrom = 0;
 
     // skip over the exe and rom name
     for (uint32_t i = 1; i < (argc - 1); i++) {
         if (strcmp("--disable-bootrom", argv[i]) == 0) {
             rtn->skip_bootrom = 1;
+        } else if (strcmp("--bootrom", argv[i]) == 0) {
+            printf("found --bootrom\n");
+            if (argc - 1 == i + 1) {
+                printf("passed --bootrom without filename, ignoring\n");
+            } else {
+                rtn->bootrom_name = argv[i + 1];
+                i++;
+            }
         } else {
             printf("skipping unknown flag '%s'", argv[i]);
-        }
+        } 
+    }
+
+    if (rtn->bootrom_name == NULL) {
+        printf("bootrom name was not specified, skipping bootrom\n");
+        rtn->skip_bootrom = 1;
     }
 
     return rtn;

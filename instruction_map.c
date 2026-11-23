@@ -39,19 +39,30 @@ uint16_t to_u16(uint8_t high, uint8_t low){
     return ((uint16_t)(high) << 8) | low;
 }
 
+uint8_t read_d8(State* s){
+    return mm_read(s, *s->cpu->PC + 1);
+}
+
+void ld_d8_to(State* s, uint8_t* t){
+    *t = read_d8(s);
+}
+
+uint16_t read_d16(State* s){
+    return to_u16(
+        mm_read(s, *s->cpu->PC + 2),
+        mm_read(s, *s->cpu->PC + 1)
+    );
+}
+
 void nop(State* state){
     (*state->cpu->PC)++;
     sleep_cycle(state);
 }
 
 void ld_bc_d16(State* state) {
-   *state->cpu->BC = to_u16(
-        mm_read(state, *state->cpu->PC + 2),
-        mm_read(state, *state->cpu->PC + 1)
-    );
-
-   *state->cpu->PC += 3;
-   sleep_cycles(state, 3);
+    *state->cpu->BC = read_d16(state);
+    *state->cpu->PC += 3;
+    sleep_cycles(state, 3);
 }
 
 void ldbc_a(State* state) {
@@ -96,6 +107,64 @@ void dec_u8(State* s, uint8_t* v){
     (*v)++;
 }
 
+void rotrc(State* s, uint8_t* v, uint8_t set_zero){
+    if (set_zero && *v == 0){
+        setZ(s, 1);
+    } else {
+        setZ(s, 0);
+    }
+
+    setSubtraction(s, 0);
+    setHalfCarry(s, 0);
+
+    uint8_t low = (*v) & 0x01;
+    setCarry(s, low);
+    *v = *v >> 1;
+    *v |= (low << 7);
+}
+
+void rotlc(State* s, uint8_t* v, uint8_t set_zero){
+    if (set_zero && *v == 0){
+        setZ(s, 1);
+    } else {
+        setZ(s, 0);
+    }
+
+    setSubtraction(s, 0);
+    setHalfCarry(s, 0);
+
+    uint8_t high = ((*v) & 0x80) >> 7;
+    setCarry(s, high);
+    *v = *v << 1;
+    *v |= high;
+}
+
+void rotr(State* s, uint8_t* v){
+    uint8_t cy = ((*s->cpu->AF) >> 4) & 0x01;
+    if (cy == 0 && (*v & 0xFE) == 0){
+        setZ(s, 1);
+    } else {
+        setZ(s, 0);
+    }
+
+    uint8_t new_cy = (*v & 0x01);
+    *v = (*v >> 1) | (cy << 7);
+    setCarry(s, new_cy);
+}
+
+void rotl(State* s, uint8_t* v){
+    uint8_t cy = ((*s->cpu->AF) >> 4) & 0x01;
+    if (cy == 0 && (*v & 0x7F) == 0){
+        setZ(s, 1);
+    } else {
+        setZ(s, 0);
+    }
+
+    uint8_t new_cy = (*v & 0x80);
+    *v = (*v << 1) | cy;
+    setCarry(s, new_cy);
+}
+
 void inc_b(State* state){
     inc_u8(state, state->cpu->B);
     (*state->cpu->PC)++;
@@ -115,29 +184,13 @@ void ld_b_d8(State* state){
 }
 
 void rlca(State* state){
-    setSubtraction(state, 0);
-    setHalfCarry(state, 0);
-    setZ(state, 0);
-
-    uint8_t high = ((*state->cpu->A) & 0x80) >> 7;
-    (*state->cpu->A) = (*state->cpu->A) << 1;
-    (*state->cpu->A) |= high;
-
-    if (high) {
-        setCarry(state, 1);
-    } else {
-        setCarry(state, 0);
-    }
-
+    rotlc(state, state->cpu->A, 0);
     (*state->cpu->PC)++;
     sleep_cycle(state);
 }
 
 void lda16_sp(State* state){
-    uint16_t address = to_u16(
-        mm_read(state, (*state->cpu->PC) + 1),
-        mm_read(state, (*state->cpu->PC) + 2)
-    );
+    uint16_t address = read_d16(state);
 
     mm_write(state, address, *(state->cpu->SP + 1));
     mm_write(state, address + 1, *(state->cpu->SP));
@@ -160,11 +213,48 @@ void add_u16(State* state, uint16_t* dst, uint16_t* op){
 
 void add_hl_bc(State* state){
     add_u16(state, state->cpu->HL, state->cpu->BC);
+    (*state->cpu->PC)++;
     sleep_cycles(state, 2);
 }
 
-InstructionFn instruction_map[0x0A] = {
-    nop, ld_bc_d16, ldbc_a, inc_bc, inc_b, dec_b, ld_b_d8, rlca, lda16_sp, add_hl_bc
+void ld_a_bc(State* state){
+    *state->cpu->A = mm_read(state, *state->cpu->BC);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void dec_bc(State* state){
+    (*state->cpu->BC)--;
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void inc_c(State* state) {
+    inc_u8(state, state->cpu->C);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void dec_c(State* state) {
+    dec_u8(state, state->cpu->C);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void ld_c_d8(State* state){
+    ld_d8_to(state, state->cpu->C);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void rrca(State* state){
+    rotrc(state, state->cpu->A, 0);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+InstructionFn instruction_map[0x10] = {
+    nop, ld_bc_d16, ldbc_a, inc_bc, inc_b, dec_b, ld_b_d8, rlca, lda16_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_d8, rrca
 };
 
 
