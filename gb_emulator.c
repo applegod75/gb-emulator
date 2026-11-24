@@ -15,7 +15,8 @@ State* initGameboy(Args* a){
     rtn->current_cycle = 0;
     rtn->cpu = cpu_init();
     rtn->loaded_cartridge = cartridge_load(a->rom_name);
-    
+    rtn->debug_mode = a->debug_mode;
+
     if (rtn->loaded_cartridge == NULL){
         printf("failed to load cartridge\n");
         return NULL;

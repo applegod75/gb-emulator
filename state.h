@@ -14,6 +14,7 @@ typedef struct {
     uint64_t current_cycle;
     Uint64 start_time;
     Uint32* pixel_buf;
+    uint8_t debug_mode;
 } State;
 
 

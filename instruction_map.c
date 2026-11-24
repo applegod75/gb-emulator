@@ -1,6 +1,7 @@
 #include "instruction_map.h"
 #include "memory_map.h"
 #include "sleep.h"
+#include <stdio.h>
 
 void setZ(State* s, uint8_t v){
     if (v){
@@ -108,12 +109,6 @@ void dec_u8(State* s, uint8_t* v){
 }
 
 void rotrc(State* s, uint8_t* v, uint8_t set_zero){
-    if (set_zero && *v == 0){
-        setZ(s, 1);
-    } else {
-        setZ(s, 0);
-    }
-
     setSubtraction(s, 0);
     setHalfCarry(s, 0);
 
@@ -121,15 +116,15 @@ void rotrc(State* s, uint8_t* v, uint8_t set_zero){
     setCarry(s, low);
     *v = *v >> 1;
     *v |= (low << 7);
-}
 
-void rotlc(State* s, uint8_t* v, uint8_t set_zero){
     if (set_zero && *v == 0){
         setZ(s, 1);
     } else {
         setZ(s, 0);
     }
+}
 
+void rotlc(State* s, uint8_t* v, uint8_t set_zero){
     setSubtraction(s, 0);
     setHalfCarry(s, 0);
 
@@ -137,32 +132,38 @@ void rotlc(State* s, uint8_t* v, uint8_t set_zero){
     setCarry(s, high);
     *v = *v << 1;
     *v |= high;
-}
 
-void rotr(State* s, uint8_t* v){
-    uint8_t cy = ((*s->cpu->AF) >> 4) & 0x01;
-    if (cy == 0 && (*v & 0xFE) == 0){
+    if (set_zero && *v == 0){
         setZ(s, 1);
     } else {
         setZ(s, 0);
     }
+}
 
+void rotr(State* s, uint8_t* v, uint8_t set_zero){
+    uint8_t cy = ((*s->cpu->AF) >> 4) & 0x01;
     uint8_t new_cy = (*v & 0x01);
     *v = (*v >> 1) | (cy << 7);
     setCarry(s, new_cy);
-}
 
-void rotl(State* s, uint8_t* v){
-    uint8_t cy = ((*s->cpu->AF) >> 4) & 0x01;
-    if (cy == 0 && (*v & 0x7F) == 0){
+    if (set_zero && *v == 0){
         setZ(s, 1);
     } else {
         setZ(s, 0);
     }
+}
 
+void rotl(State* s, uint8_t* v, uint8_t set_zero){
+    uint8_t cy = ((*s->cpu->AF) >> 4) & 0x01;
     uint8_t new_cy = (*v & 0x80);
     *v = (*v << 1) | cy;
     setCarry(s, new_cy);
+
+    if (set_zero && *v == 0){
+        setZ(s, 1);
+    } else {
+        setZ(s, 0);
+    }
 }
 
 void inc_b(State* state){
@@ -253,8 +254,115 @@ void rrca(State* state){
     sleep_cycle(state);
 }
 
-InstructionFn instruction_map[0x10] = {
-    nop, ld_bc_d16, ldbc_a, inc_bc, inc_b, dec_b, ld_b_d8, rlca, lda16_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_d8, rrca
+void stop(State* state){
+    if (state->debug_mode) {
+        printf("CPU:\n");
+        printf("\tAF = 0x%X\n", *state->cpu->AF);
+        printf("\tBC = 0x%X\n", *state->cpu->BC);
+        printf("\tDE = 0x%X\n", *state->cpu->DE);
+        printf("\tHL = 0x%X\n", *state->cpu->HL);
+        printf("\tPC = 0x%X\n", *state->cpu->PC);
+        printf("\tSP = 0x%X\n", *state->cpu->SP);
+    } else {
+        printf("WARN: reached unimplemented cpu instruction 'STOP'\n");
+    }
+
+    (*state->cpu->PC) += 2;
+}
+
+void ld_de_d16(State* state){
+    *state->cpu->DE = read_d16(state);
+    (*state->cpu->PC) += 3;
+    sleep_cycles(state, 3);
+}
+
+void ldde_a(State* state){
+    mm_write(state, *state->cpu->DE, *state->cpu->A);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void inc_de(State* state){
+    (*state->cpu->DE)++;
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void inc_d(State* state){
+    inc_u8(state, state->cpu->D);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void dec_d(State* state){
+    dec_u8(state, state->cpu->D);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void ld_d_d8(State* state){
+    ld_d8_to(state, state->cpu->D);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void rla(State* state){
+    rotl(state, state->cpu->A, 0);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void jr_s8(State* state){
+    int8_t d = (int8_t)read_d8(state);
+    (*state->cpu->PC) += d;
+    sleep_cycles(state, 3);
+}
+
+void add_hl_de(State* state){
+    add_u16(state, state->cpu->HL, state->cpu->DE);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void ld_a_de(State* state){
+    *state->cpu->A = mm_read(state, *state->cpu->DE);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void dec_de(State* state){
+    (*state->cpu->DE)--;
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void inc_e(State* state){
+    inc_u8(state, state->cpu->E);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void dec_e(State* state){
+    dec_u8(state, state->cpu->E);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void ld_e_d8(State* state){
+    (*state->cpu->E) = read_d8(state);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void rra(State* state) {
+    rotr(state, state->cpu->A, 0);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+InstructionFn instruction_map[0x20] = {
+    nop,  ld_bc_d16, ldbc_a, inc_bc, inc_b, dec_b, ld_b_d8, rlca, lda16_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_d8, rrca,
+    stop, ld_de_d16, ldde_a, inc_de, inc_d, dec_d, ld_d_d8, rla,  jr_s8,    add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_d8, rra
 };
 
 

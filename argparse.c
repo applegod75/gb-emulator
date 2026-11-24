@@ -31,13 +31,16 @@ Args* parseArgs(int argc, char** argv){
         if (strcmp("--disable-bootrom", argv[i]) == 0) {
             rtn->skip_bootrom = 1;
         } else if (strcmp("--bootrom", argv[i]) == 0) {
-            printf("found --bootrom\n");
             if (argc - 1 == i + 1) {
                 printf("passed --bootrom without filename, ignoring\n");
             } else {
                 rtn->bootrom_name = argv[i + 1];
                 i++;
             }
+        } else if (strcmp("--debug-mode", argv[i]) == 0) {
+            printf("WARN: debug mode permanently changes the behaviour of the STOP instruction, and should never be used if you are not actively ");
+            printf("debugging the gameboy emulator itself.\n");
+            rtn->debug_mode = 1;
         } else {
             printf("skipping unknown flag '%s'", argv[i]);
         } 

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 typedef struct {
+    uint8_t debug_mode;
     uint8_t skip_bootrom;
     char* rom_name;
     char* bootrom_name;
