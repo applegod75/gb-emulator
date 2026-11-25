@@ -330,8 +330,8 @@ void rla(State* state){
 
 void jr_s8(State* state){
     int8_t d = (int8_t)read_d8(state);
-    // I believe the address is relative to the first byte after the jr instruction
-    (*state->cpu->PC) += (d + 0x3);
+    // I believe the address is relative to the end of the jr instruction
+    (*state->cpu->PC) += (d + 0x2);
     sleep_cycles(state, 3);
 }
 
@@ -379,8 +379,8 @@ void rra(State* state){
 
 void jr_nz_s8(State* state){
     int8_t d = (int8_t)read_d8(state);
-    if (getZ(state)){
-        (*state->cpu->PC) += (d + 3);
+    if (getZ(state) == 0){
+        (*state->cpu->PC) += (d + 0x02);
         sleep_cycles(state, 3);
     } else {
         (*state->cpu->PC) += 2;
@@ -406,10 +406,83 @@ void inc_hl(State* state){
     sleep_cycles(state, 2);
 }
 
-InstructionFn instruction_map[0x25] = {
-    nop,      ld_bc_d16, ldbc_a,    inc_bc,   inc_b,  dec_b, ld_b_d8, rlca, lda16_sp, add_hl_bc, ld_a_bc, dec_bc, inc_c, dec_c, ld_c_d8, rrca,
-    stop,     ld_de_d16, ldde_a,    inc_de,   inc_d,  dec_d, ld_d_d8, rla,  jr_s8,    add_hl_de, ld_a_de, dec_de, inc_e, dec_e, ld_e_d8, rra,
-    jr_nz_s8, ld_hl_d16, ld_hl_d16, ld_hlp_a, inc_hl, 
+void inc_h(State* state){
+    inc_u8(state, state->cpu->H);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void dec_h(State* state){
+    dec_u8(state, state->cpu->H);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void ld_h_d8(State* state){
+    (*state->cpu->H) = read_d8(state);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void daa(State* state){ // very scary instruction
+    uint8_t op = (getSubtraction(state)) ? (-1) : (1); // no repeated code in my codebase >:3
+    if (getHalfCarry(state)){
+        *state->cpu->A += (op * 0x06);
+    }
+    
+    setHalfCarry(state, 0);
+
+    if (getCarry(state)){
+        *state->cpu->A += (op * 0x60);
+    }
+    
+    if (*state->cpu->A > 0x99) {
+        setCarry(state, 1);
+        *state->cpu->A += (op * 0x60);
+    } else {
+        setCarry(state, 0);
+    }
+
+    if (*state->cpu->A == 0x0){
+        setZ(state, 1);
+    } else {
+        setZ(state, 0);
+    }
+}
+
+void jr_z_s8(State* state){
+    if (getZ(state)){
+        int8_t d = read_d8(state);
+        (*state->cpu->PC) += (d + 0x02);
+        sleep_cycles(state, 3);
+    } else {
+        (*state->cpu->PC) += 2;
+        sleep_cycles(state, 2);
+    }
+}
+
+void add_hl_hl(State* state){
+    add_u16(state, state->cpu->HL, state->cpu->HL);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void ld_a_hlp(State* state){
+    *state->cpu->A = mm_read(state, (*state->cpu->HL)++);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void dec_hl(State* state){
+    (*state->cpu->HL)--;
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+InstructionFn instruction_map[0x2C] = {
+    nop,      ld_bc_d16, ldbc_a,   inc_bc, inc_b, dec_b, ld_b_d8, rlca, lda16_sp, add_hl_bc, ld_a_bc,  dec_bc, inc_c, dec_c, ld_c_d8, rrca,
+    stop,     ld_de_d16, ldde_a,   inc_de, inc_d, dec_d, ld_d_d8, rla,  jr_s8,    add_hl_de, ld_a_de,  dec_de, inc_e, dec_e, ld_e_d8, rra,
+    jr_nz_s8, ld_hl_d16, ld_hlp_a, inc_hl, inc_h, dec_h, ld_h_d8, daa,  jr_z_s8,  add_hl_hl, ld_a_hlp, dec_hl
 };
 
 
