@@ -479,10 +479,37 @@ void dec_hl(State* state){
     sleep_cycles(state, 2);
 }
 
-InstructionFn instruction_map[0x2C] = {
+void inc_l(State* state){
+    inc_u8(state, state->cpu->L);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void dec_l(State* state){
+    dec_u8(state, state->cpu->L);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void ld_l_d8(State* state){
+    (*state->cpu->L) = read_d8(state);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void cpl(State* state){
+    setSubtraction(state, 1);
+    setHalfCarry(state, 1);
+    (*state->cpu->A) = ~(*state->cpu->A);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+InstructionFn instruction_map[0x30] = {
     nop,      ld_bc_d16, ldbc_a,   inc_bc, inc_b, dec_b, ld_b_d8, rlca, lda16_sp, add_hl_bc, ld_a_bc,  dec_bc, inc_c, dec_c, ld_c_d8, rrca,
     stop,     ld_de_d16, ldde_a,   inc_de, inc_d, dec_d, ld_d_d8, rla,  jr_s8,    add_hl_de, ld_a_de,  dec_de, inc_e, dec_e, ld_e_d8, rra,
-    jr_nz_s8, ld_hl_d16, ld_hlp_a, inc_hl, inc_h, dec_h, ld_h_d8, daa,  jr_z_s8,  add_hl_hl, ld_a_hlp, dec_hl
+    jr_nz_s8, ld_hl_d16, ld_hlp_a, inc_hl, inc_h, dec_h, ld_h_d8, daa,  jr_z_s8,  add_hl_hl, ld_a_hlp, dec_hl, inc_l, dec_l, ld_l_d8, cpl,
+
 };
 
 
