@@ -505,11 +505,127 @@ void cpl(State* state){
     sleep_cycle(state);
 }
 
-InstructionFn instruction_map[0x30] = {
+void jr_nc_s8(State* state){
+    if (getCarry(state) == 0){
+        int8_t d = (int8_t)read_d8(state);
+        (*state->cpu->PC) += (d + 2);
+        sleep_cycles(state, 3);
+    } else {
+        (*state->cpu->PC) += 2;
+        sleep_cycles(state, 2);
+    }
+}
+
+void ld_sp_d16(State* state){
+    (*state->cpu->SP) = read_d16(state);
+    (*state->cpu->PC) += 3;
+    sleep_cycles(state, 3);
+}
+
+void ld_hlm_a(State* state){
+    mm_write(state, (*state->cpu->HL)--, *state->cpu->A);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void inc_sp(State* state){
+    (*state->cpu->SP)++;
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void inchl(State* state){
+    // kinda funky shenanigans because I can't take a reference to the return value of mm_read
+    uint8_t v = mm_read(state, *state->cpu->HL);
+    inc_u8(state, &v);
+    mm_write(state, *state->cpu->HL, v);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 3);
+}
+
+void dechl(State* state){
+    // same as above
+    uint8_t v = mm_read(state, *state->cpu->HL);
+    dec_u8(state, &v);
+    mm_write(state, *state->cpu->HL, v);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 3);
+}
+
+void ldhl_d8(State* state){
+    mm_write(state, *state->cpu->HL, read_d8(state));
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 3);
+}
+
+void scf(State* state){
+    setCarry(state, 1);
+    setHalfCarry(state, 0);
+    setSubtraction(state, 0);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void jr_c_s8(State* state){
+    if (getCarry(state)) {
+        int8_t d = (int8_t)read_d8(state);
+        (*state->cpu->PC) += (d + 2);
+        sleep_cycles(state, 3);
+    } else {
+        (*state->cpu->PC) += 2;
+        sleep_cycles(state, 2);
+    }
+}
+
+void add_hl_sp(State* state){
+    add_u16(state, state->cpu->HL, state->cpu->SP);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void ld_a_hlm(State* state){
+    (*state->cpu->A) = mm_read(state, (*state->cpu->HL)--);   
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void dec_sp(State* state){
+    (*state->cpu->SP)--;
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void inc_a(State* state){
+    inc_u8(state, state->cpu->A);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void dec_a(State* state){
+    dec_u8(state, state->cpu->A);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void ld_a_d8(State* state){
+    (*state->cpu->A) = read_d8(state);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void ccf(State* state){
+    setCarry(state, !getCarry(state));
+    setHalfCarry(state, 0);
+    setSubtraction(state, 0);
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+InstructionFn instruction_map[0x40] = {
     nop,      ld_bc_d16, ldbc_a,   inc_bc, inc_b, dec_b, ld_b_d8, rlca, lda16_sp, add_hl_bc, ld_a_bc,  dec_bc, inc_c, dec_c, ld_c_d8, rrca,
     stop,     ld_de_d16, ldde_a,   inc_de, inc_d, dec_d, ld_d_d8, rla,  jr_s8,    add_hl_de, ld_a_de,  dec_de, inc_e, dec_e, ld_e_d8, rra,
     jr_nz_s8, ld_hl_d16, ld_hlp_a, inc_hl, inc_h, dec_h, ld_h_d8, daa,  jr_z_s8,  add_hl_hl, ld_a_hlp, dec_hl, inc_l, dec_l, ld_l_d8, cpl,
-
+    jr_nc_s8, ld_sp_d16, ld_hlm_a, inc_sp, inchl, dechl, ldhl_d8, scf,  jr_c_s8,  add_hl_sp, ld_a_hlm, dec_sp, inc_a, dec_a, ld_a_d8, ccf
 };
 
 
