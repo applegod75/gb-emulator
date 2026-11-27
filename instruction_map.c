@@ -282,13 +282,44 @@ void add_u16(State* state, uint16_t* dst, uint16_t* op){
     setSubtraction(state, 0);
     if ((((*dst) & 0x0F) + ((*op) & 0x0F) & 0x10) == 0x10){
         setHalfCarry(state, 1);
+    } else {
+        setHalfCarry(state, 0);
     }
 
     if ((((*dst) & 0xFF) + ((*op) & 0xFF) & 0x100) == 0x100){
         setCarry(state, 1);
+    } else {
+        setCarry(state, 0);
     }
 
     *dst += *op;
+    if (*dst == 0){
+        setZ(state, 1);
+    } else {
+        setZ(state, 0);
+    }
+}
+
+void sub_u16(State* state, uint16_t* dst, uint16_t* op){
+    setSubtraction(state, 1);
+    if ((((*dst) & 0x0F) - ((*op) & 0x0F) & 0x10) == 0x10){
+        setHalfCarry(state, 1);
+    } else {
+        setHalfCarry(state, 0);
+    }
+
+    if ((((*dst) & 0xFF) - ((*op) & 0xFF) & 0x100) == 0x100){
+        setCarry(state, 1);
+    } else {
+        setCarry(state, 0);
+    }
+
+    *dst -= *op;
+    if (*dst == 0){
+        setZ(state, 1);
+    } else {
+        setZ(state, 0);
+    }
 }
 
 void add_hl_bc(State* state){
@@ -1874,7 +1905,195 @@ void rst_3(State* state){
     sleep_cycles(state, 4);
 }
 
-InstructionFn instruction_map[0xE0] = {
+void lda8_a(State* state){
+    mm_write(state, read_d8(state) + 0xFF00, (*state->cpu->A));
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 3);
+}
+
+void pop_hl(State* state){
+    (*state->cpu->HL) = pop(state);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 3);
+}
+
+void ldc_a(State* state){
+    mm_write(state, (*state->cpu->C) + 0xFF00, (*state->cpu->A));
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void push_hl(State* state){
+    push_u16(state, *state->cpu->HL);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 4);
+}
+
+void and_d8(State* state){
+   setSubtraction(state, 0);
+   setCarry(state, 0);
+   setHalfCarry(state, 1);
+   (*state->cpu->A) &= read_d8(state);
+   if (*state->cpu->A == 0){
+        setZ(state, 1);
+   } else {
+        setZ(state, 0);
+   }
+
+   (*state->cpu->PC) += 2;
+   sleep_cycles(state, 2);
+}
+
+void rst_4(State* state){
+    push_u16(state, *state->cpu->PC);
+    (*state->cpu->PC) = 0x20;
+    sleep_cycles(state, 4);
+}
+
+void add_sp_s8(State* state){
+    int16_t d = (int8_t)read_d8(state);
+    if (d < 0){
+        d = -d;
+        sub_u16(state, state->cpu->SP, (uint16_t*)&d);
+    } else {
+        add_u16(state, state->cpu->SP, (uint16_t*)&d);
+    }
+
+    setZ(state, 0);
+    setSubtraction(state, 0);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 4);
+}
+
+void jp_hl(State* state){
+    (*state->cpu->PC) = (*state->cpu->HL);
+    sleep_cycle(state);
+}
+
+void lda16_a(State* state){
+    mm_write(state, read_d16(state), *state->cpu->A);
+    (*state->cpu->PC) += 3;
+    sleep_cycles(state, 4);
+}
+
+void xor_d8(State* state){
+    (*state->cpu->A) ^= read_d8(state);
+    setSubtraction(state, 0);
+    setHalfCarry(state, 0);
+    setCarry(state, 0);
+    if (*state->cpu->A == 0){
+        setZ(state, 1);
+    } else {
+        setZ(state, 0);
+    }
+}
+
+void rst_5(State* state){
+    push_u16(state, *state->cpu->PC);
+    (*state->cpu->PC) = 0x28;
+    sleep_cycles(state, 4);
+}
+
+void ld_aa8(State* state){
+    (*state->cpu->A) = mm_read(state, read_d8(state) + 0xFF00);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 3);
+}
+
+void pop_af(State* state){
+    (*state->cpu->AF) = pop(state);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void ld_ac(State* state){
+    (*state->cpu->A) = mm_read(state, (*state->cpu->C) + 0xFF00);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void di(State* state){
+    state->cpu->IME = 0;
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void push_af(State* state){
+    push_u16(state, *state->cpu->AF);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 4);
+}
+
+void or_d8(State* state){
+    setSubtraction(state, 0);
+    setHalfCarry(state, 0);
+    setCarry(state, 0);
+
+    (*state->cpu->A) |= read_d8(state);
+    if (*state->cpu->A == 0){
+        setZ(state, 1);
+    } else {
+        setZ(state, 0);
+    }
+}
+
+void rst_6(State* state){
+    push_u16(state, *state->cpu->PC);
+    *state->cpu->PC = 0x30;
+    sleep_cycles(state, 4);
+}
+
+void ld_hl_sp_s8(State* state){
+    int16_t d = (int8_t)read_d8(state);
+    uint16_t sp = *state->cpu->SP;
+
+    if (d < 0){
+        d = -d;
+        sub_u16(state, &sp, (uint16_t*)&d);
+    } else {
+        add_u16(state, &sp, (uint16_t*)&d);
+    }
+    
+    setZ(state, 0);
+    setSubtraction(state, 0);   
+    (*state->cpu->HL) = sp;
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 3);
+}
+
+void ld_sp_hl(State* state){
+    (*state->cpu->SP) = (*state->cpu->HL);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 2);
+}
+
+void ld_aa16(State* state){
+    (*state->cpu->A) = mm_read(state, read_d16(state));
+    (*state->cpu->PC) += 3;
+    sleep_cycles(state, 4);
+}
+
+void ei(State* state){
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+    state->should_enable_interrupts = 1;
+}
+
+void cp_d8(State* state){
+    uint8_t a = (*state->cpu->A);
+    uint8_t b = read_d8(state);
+    sub_u8(state, &a, &b);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void rst_7(State* state){
+    push_u16(state, *state->cpu->PC);
+    (*state->cpu->PC) = 0x38;
+    sleep_cycles(state, 4);
+}
+
+InstructionFn instruction_map[0x100] = {
     nop,      ld_bc_d16, ldbc_a,    inc_bc,  inc_b,      dec_b,   ld_b_d8,  rlca,    lda16_sp, add_hl_bc, ld_a_bc,  dec_bc,   inc_c,   dec_c,   ld_c_d8, rrca,
     stop,     ld_de_d16, ldde_a,    inc_de,  inc_d,      dec_d,   ld_d_d8,  rla,     jr_s8,    add_hl_de, ld_a_de,  dec_de,   inc_e,   dec_e,   ld_e_d8, rra,
     jr_nz_s8, ld_hl_d16, ld_hlp_a,  inc_hl,  inc_h,      dec_h,   ld_h_d8,  daa,     jr_z_s8,  add_hl_hl, ld_a_hlp, dec_hl,   inc_l,   dec_l,   ld_l_d8, cpl,
@@ -1889,6 +2108,8 @@ InstructionFn instruction_map[0xE0] = {
     or_b,     or_c,      or_d,      or_e,    or_h,       or_l,    or_hl,    or_a,    cp_b,     cp_c,      cp_d,     cp_e,     cp_h,    cp_l,    cphl,    cp_a,
     ret_nz,   pop_bc,    jp_nz_a16, jp_a16,  call_nz_a16, push_bc, add_a_d8, rst_0,  ret_z,    ret,       jp_z_a16, unk, call_z_a16, call_a16, adc_a_d8, rst_1,
     ret_nc,   pop_de,    jp_nc_a16, unk,     call_nc_a16, push_de, sub_d8,  rst_2,   ret_c,    reti,      jp_c_a16, unk, call_c_a16, unk, sbc_a_d8, rst_3,
+    lda8_a,   pop_hl,    ldc_a,     unk,     unk,         push_hl, and_d8,  rst_4,   add_sp_s8, jp_hl,    lda16_a,  unk, unk,        unk, xor_d8,   rst_5,
+    ld_aa8,   pop_af,    ld_ac,     di,      unk,         push_af, or_d8,   rst_6,   ld_hl_sp_s8, ld_sp_hl, ld_aa16, ei, unk,        unk, cp_d8,    rst_7
 };
 
 
