@@ -1631,19 +1631,264 @@ void cphl(State* state){
 	sleep_cycles(state, 2);
 }
 
-InstructionFn instruction_map[0xC0] = {
-    nop,      ld_bc_d16, ldbc_a,   inc_bc,  inc_b,   dec_b,   ld_b_d8, rlca,    lda16_sp, add_hl_bc, ld_a_bc,  dec_bc,  inc_c,   dec_c,   ld_c_d8, rrca,
-    stop,     ld_de_d16, ldde_a,   inc_de,  inc_d,   dec_d,   ld_d_d8, rla,     jr_s8,    add_hl_de, ld_a_de,  dec_de,  inc_e,   dec_e,   ld_e_d8, rra,
-    jr_nz_s8, ld_hl_d16, ld_hlp_a, inc_hl,  inc_h,   dec_h,   ld_h_d8, daa,     jr_z_s8,  add_hl_hl, ld_a_hlp, dec_hl,  inc_l,   dec_l,   ld_l_d8, cpl,
-    jr_nc_s8, ld_sp_d16, ld_hlm_a, inc_sp,  inchl,   dechl,   ldhl_d8, scf,     jr_c_s8,  add_hl_sp, ld_a_hlm, dec_sp,  inc_a,   dec_a,   ld_a_d8, ccf,
-    ld_b_b,   ld_b_c,    ld_b_d,   ld_b_e,  ld_b_h,  ld_b_l,  ld_bhl,  ld_b_a,  ld_c_b,   ld_c_c,    ld_c_d,   ld_c_e,  ld_c_h,  ld_c_l,  ld_chl,  ld_c_a,
-    ld_d_b,   ld_d_c,    ld_d_d,   ld_d_e,  ld_d_h,  ld_d_l,  ld_dhl,  ld_d_a,  ld_e_b,   ld_e_c,    ld_e_d,   ld_e_e,  ld_e_h,  ld_e_l,  ld_ehl,  ld_e_a,
-    ld_h_b,   ld_h_c,    ld_h_d,   ld_h_e,  ld_h_h,  ld_h_l,  ld_hhl,  ld_h_a,  ld_l_b,   ld_l_c,    ld_l_d,   ld_l_e,  ld_l_h,  ld_l_l,  ld_lhl,  ld_l_a,
-    ldhl_b,   ldhl_c,    ldhl_d,   ldhl_e,  ldhl_h,  ldhl_l,  halt,    ldhl_a,  ld_a_b,   ld_a_c,    ld_a_d,   ld_a_e,  ld_a_h,  ld_a_l,  ld_ahl,  ld_a_a,
-    add_a_b,  add_a_c,   add_a_d,  add_a_e, add_a_h, add_a_l, add_ahl, add_a_a, adc_a_b,  adc_a_c,   adc_a_d,  adc_a_e, adc_a_h, adc_a_l, adc_ahl, adc_a_a,
-    sub_a_b,  sub_a_c,   sub_a_d,  sub_a_e, sub_a_h, sub_a_l, sub_ahl, sub_a_a, sbc_a_b,  sbc_a_c,   sbc_a_d,  sbc_a_e, sbc_a_h, sbc_a_l, sbc_ahl, sbc_a_a,
-    and_b,    and_c,     and_d,    and_e,   and_h,   and_l,   and_hl,  and_a,   xor_b,    xor_c,     xor_d,    xor_e,   xor_h,   xor_l,   xor_hl,  xor_a,
-    or_b,     or_c,      or_d,     or_e,    or_h,    or_l,    or_hl,   or_a,    cp_b,     cp_c,      cp_d,     cp_e,    cp_h,    cp_l,    cphl,   cp_a
+uint16_t pop(State* s){
+    return ((uint16_t)mm_read(s, (*s->cpu->SP)++) |
+            ((uint16_t)mm_read(s, (*s->cpu->SP)++) << 8));
+}
+
+void push_u8(State* s, uint8_t v){
+    mm_write(s, --(*s->cpu->SP), v);
+}
+
+void push_u16(State* s, uint16_t v){
+    push_u8(s, (v >> 8) & 0xFF);
+    push_u8(s, (v & 0xFF));
+}
+
+void ret_nz(State* state){
+    if (getZ(state) != 0){
+        (*state->cpu->PC)++;
+        sleep_cycles(state, 2);
+    } else {
+        *state->cpu->PC = pop(state);
+        sleep_cycles(state, 5);
+    }
+}
+
+void pop_bc(State* state){
+    *state->cpu->BC = pop(state);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 3);
+}
+
+void jp_nz_a16(State* state){
+    if (getZ(state) != 0){
+        (*state->cpu->PC) += 3;
+        sleep_cycles(state, 3);
+    } else {
+        (*state->cpu->PC) = read_d16(state);
+        sleep_cycles(state, 4);
+    }
+}
+
+void jp_a16(State* state){
+    (*state->cpu->PC) = read_d16(state);
+    sleep_cycles(state, 4);
+}
+
+void call_nz_a16(State* state){
+    if (getZ(state) != 0){
+        (*state->cpu->PC) += 3;
+        sleep_cycles(state, 3);
+    } else {
+        push_u16(state, (*state->cpu->PC) + 3);
+        (*state->cpu->PC) += read_d16(state);
+        sleep_cycles(state, 6);
+    }
+}
+
+void push_bc(State* state){
+    push_u16(state, *state->cpu->BC);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 4);
+}
+
+void add_a_d8(State* state){
+    uint8_t v = read_d8(state);
+    add_u8(state, state->cpu->A, &v);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void rst_0(State* state){
+    push_u16(state, *state->cpu->PC);
+    (*state->cpu->PC) = 0x00;
+    sleep_cycles(state, 4);
+}
+
+void ret_z(State* state){
+    if (getZ(state) == 0){
+        (*state->cpu->PC)++;
+        sleep_cycles(state, 2);
+    } else {
+        (*state->cpu->PC) = pop(state);
+        sleep_cycles(state, 5);
+    }
+}
+
+void ret(State* state){
+    (*state->cpu->PC) = pop(state);
+    sleep_cycles(state, 4);
+}
+
+void jp_z_a16(State* state){
+    if (getZ(state) == 0){
+        (*state->cpu->PC) += 3;
+        sleep_cycles(state, 3);
+    } else {
+        (*state->cpu->PC) = read_d16(state);
+        sleep_cycles(state, 4);
+    }
+}
+
+void unk(State* state){
+    printf("WARN: reached unknown instruction 0x%X\n", mm_read(state, *state->cpu->PC));
+    (*state->cpu->PC)++;
+    sleep_cycle(state);
+}
+
+void call_z_a16(State* state){
+    if (getZ(state) == 0){
+        (*state->cpu->PC) += 3;
+        sleep_cycles(state, 3);
+    } else {
+        push_u16(state, *state->cpu->PC);
+        (*state->cpu->PC) = read_d16(state);
+        sleep_cycles(state, 6);
+    }
+}
+
+void call_a16(State* state){
+    push_u16(state, *state->cpu->PC);
+    (*state->cpu->PC) = read_d16(state);
+    sleep_cycles(state, 6);
+}
+
+void adc_a_d8(State* state){
+    uint8_t v = read_d8(state);
+    adc_u8(state, state->cpu->A, &v);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void rst_1(State* state){
+    push_u16(state, *state->cpu->PC);
+    (*state->cpu->PC) = 0x08;
+    sleep_cycles(state, 4);
+}
+
+void ret_nc(State* state){
+    if (getCarry(state) != 0){
+        (*state->cpu->PC)++;
+        sleep_cycles(state, 2);
+    } else {
+        (*state->cpu->PC) = pop(state);
+        sleep_cycles(state, 5);
+    }
+}
+
+void pop_de(State* state){
+    (*state->cpu->DE) = pop(state);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 3);
+}
+
+void jp_nc_a16(State* state){
+    if (getCarry(state) != 0){
+        (*state->cpu->PC) += 3;
+        sleep_cycles(state, 3);
+    } else {
+        (*state->cpu->PC) = read_d16(state);
+        sleep_cycles(state, 4);
+    }
+}
+
+void call_nc_a16(State* state){
+    if (getCarry(state) != 0){
+        (*state->cpu->PC) += 3;
+        sleep_cycles(state, 3);
+    } else {
+        push_u16(state, *state->cpu->PC);
+        (*state->cpu->PC) = read_d16(state);
+        sleep_cycles(state, 6);
+    }
+}
+
+void push_de(State* state){
+    push_u16(state, *state->cpu->DE);
+    (*state->cpu->PC)++;
+    sleep_cycles(state, 4);
+}
+
+void sub_d8(State* state){
+    uint8_t v = read_d8(state);
+    sub_u8(state, state->cpu->A, &v);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void rst_2(State* state){
+    push_u16(state, *state->cpu->PC);
+    (*state->cpu->PC) = 0x10;
+    sleep_cycles(state, 4);
+}
+
+void ret_c(State* state){
+    if (getCarry(state) == 0){
+        (*state->cpu->PC)++;
+        sleep_cycles(state, 2);
+    } else {
+        (*state->cpu->PC) = pop(state);
+        sleep_cycles(state, 5);
+    }
+}
+
+void reti(State* state){
+    (*state->cpu->PC) = pop(state);
+    sleep_cycles(state, 4);
+    state->should_enable_interrupts = 1;
+}
+
+void jp_c_a16(State* state){
+    if (getCarry(state) == 0){
+        (*state->cpu->PC) += 3;
+        sleep_cycles(state, 3);
+    } else {
+        (*state->cpu->PC) = read_d16(state);
+        sleep_cycles(state, 4);
+    }
+}
+
+void call_c_a16(State* state){
+    if (getCarry(state) == 0){
+        (*state->cpu->PC) += 3;
+        sleep_cycles(state, 3);
+    } else {
+        push_u16(state, (*state->cpu->PC));
+        (*state->cpu->PC) = read_d16(state);
+        sleep_cycles(state, 6);
+    }
+}
+
+void sbc_a_d8(State* state){
+    uint8_t intermediary = read_d8(state);
+    intermediary += getCarry(state);
+    sbc_u8(state, state->cpu->A, &intermediary);
+    (*state->cpu->PC) += 2;
+    sleep_cycles(state, 2);
+}
+
+void rst_3(State* state){
+    push_u16(state, *state->cpu->PC);
+    (*state->cpu->PC) = 0x18;
+    sleep_cycles(state, 4);
+}
+
+InstructionFn instruction_map[0xE0] = {
+    nop,      ld_bc_d16, ldbc_a,    inc_bc,  inc_b,      dec_b,   ld_b_d8,  rlca,    lda16_sp, add_hl_bc, ld_a_bc,  dec_bc,   inc_c,   dec_c,   ld_c_d8, rrca,
+    stop,     ld_de_d16, ldde_a,    inc_de,  inc_d,      dec_d,   ld_d_d8,  rla,     jr_s8,    add_hl_de, ld_a_de,  dec_de,   inc_e,   dec_e,   ld_e_d8, rra,
+    jr_nz_s8, ld_hl_d16, ld_hlp_a,  inc_hl,  inc_h,      dec_h,   ld_h_d8,  daa,     jr_z_s8,  add_hl_hl, ld_a_hlp, dec_hl,   inc_l,   dec_l,   ld_l_d8, cpl,
+    jr_nc_s8, ld_sp_d16, ld_hlm_a,  inc_sp,  inchl,      dechl,   ldhl_d8,  scf,     jr_c_s8,  add_hl_sp, ld_a_hlm, dec_sp,   inc_a,   dec_a,   ld_a_d8, ccf,
+    ld_b_b,   ld_b_c,    ld_b_d,    ld_b_e,  ld_b_h,     ld_b_l,  ld_bhl,   ld_b_a,  ld_c_b,   ld_c_c,    ld_c_d,   ld_c_e,   ld_c_h,  ld_c_l,  ld_chl,  ld_c_a,
+    ld_d_b,   ld_d_c,    ld_d_d,    ld_d_e,  ld_d_h,     ld_d_l,  ld_dhl,   ld_d_a,  ld_e_b,   ld_e_c,    ld_e_d,   ld_e_e,   ld_e_h,  ld_e_l,  ld_ehl,  ld_e_a,
+    ld_h_b,   ld_h_c,    ld_h_d,    ld_h_e,  ld_h_h,     ld_h_l,  ld_hhl,   ld_h_a,  ld_l_b,   ld_l_c,    ld_l_d,   ld_l_e,   ld_l_h,  ld_l_l,  ld_lhl,  ld_l_a,
+    ldhl_b,   ldhl_c,    ldhl_d,    ldhl_e,  ldhl_h,     ldhl_l,  halt,     ldhl_a,  ld_a_b,   ld_a_c,    ld_a_d,   ld_a_e,   ld_a_h,  ld_a_l,  ld_ahl,  ld_a_a,
+    add_a_b,  add_a_c,   add_a_d,   add_a_e, add_a_h,    add_a_l, add_ahl,  add_a_a, adc_a_b,  adc_a_c,   adc_a_d,  adc_a_e,  adc_a_h, adc_a_l, adc_ahl, adc_a_a,
+    sub_a_b,  sub_a_c,   sub_a_d,   sub_a_e, sub_a_h,    sub_a_l, sub_ahl,  sub_a_a, sbc_a_b,  sbc_a_c,   sbc_a_d,  sbc_a_e,  sbc_a_h, sbc_a_l, sbc_ahl, sbc_a_a,
+    and_b,    and_c,     and_d,     and_e,   and_h,      and_l,   and_hl,   and_a,   xor_b,    xor_c,     xor_d,    xor_e,    xor_h,   xor_l,   xor_hl,  xor_a,
+    or_b,     or_c,      or_d,      or_e,    or_h,       or_l,    or_hl,    or_a,    cp_b,     cp_c,      cp_d,     cp_e,     cp_h,    cp_l,    cphl,    cp_a,
+    ret_nz,   pop_bc,    jp_nz_a16, jp_a16,  call_nz_a16, push_bc, add_a_d8, rst_0,  ret_z,    ret,       jp_z_a16, unk, call_z_a16, call_a16, adc_a_d8, rst_1,
+    ret_nc,   pop_de,    jp_nc_a16, unk,     call_nc_a16, push_de, sub_d8,  rst_2,   ret_c,    reti,      jp_c_a16, unk, call_c_a16, unk, sbc_a_d8, rst_3,
 };
 
 

@@ -15,6 +15,7 @@ typedef struct {
     Uint64 start_time;
     Uint32* pixel_buf;
     uint8_t debug_mode;
+    uint8_t should_enable_interrupts;
 } State;
 
 

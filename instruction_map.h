@@ -5,7 +5,7 @@
 #include "state.h"
 
 typedef void(*InstructionFn)(State*);
-extern InstructionFn instruction_map[0xC0];
+extern InstructionFn instruction_map[0xE0];
 extern InstructionFn prefixed_instruction_map[0x1];
 
 #endif

@@ -10,6 +10,7 @@ typedef struct {
     uint16_t* HL; uint8_t* H; uint8_t* L;
     uint16_t* SP;
     uint16_t* PC;
+    uint8_t IME;
 } CpuState;
 
 #endif

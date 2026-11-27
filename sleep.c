@@ -13,8 +13,18 @@ void sleep_cycle(State* state){
             printf("too slow by %lluns\n", now - target);
         }
     }
+
+    if (state->should_enable_interrupts == 1){
+        state->should_enable_interrupts = 0;
+        state->cpu->IME = 1;
+    }
 }
 
 void sleep_cycles(State* state, uint8_t a){
     state->current_cycle += a;
+
+    if (state->should_enable_interrupts == 1){
+        state->should_enable_interrupts = 0;
+        state->cpu->IME = 1;
+    }
 }
