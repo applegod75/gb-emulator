@@ -40,7 +40,13 @@ CpuState* cpu_init(){
 }
 
 void cpu_cycle(State* state){
-    instruction_map[mm_read(state, *state->cpu->PC)](state);
+    uint8_t opcode = mm_read(state, *state->cpu->PC);
+    if (opcode == 0xCB){
+        uint8_t bitwise_opcode = mm_read(state, (*state->cpu->PC) + 1);
+        prefixed_instruction_map[bitwise_opcode](state);
+    } else {
+        instruction_map[opcode](state);
+    }
 }
 
 void cpu_free(CpuState* state){

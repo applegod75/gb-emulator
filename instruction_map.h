@@ -6,6 +6,6 @@
 
 typedef void(*InstructionFn)(State*);
 extern InstructionFn instruction_map[0x100];
-extern InstructionFn prefixed_instruction_map[0x1];
+extern InstructionFn prefixed_instruction_map[0x100];
 
 #endif

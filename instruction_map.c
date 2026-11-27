@@ -2112,5 +2112,1667 @@ InstructionFn instruction_map[0x100] = {
     ld_aa8,   pop_af,    ld_ac,     di,      unk,         push_af, or_d8,   rst_6,   ld_hl_sp_s8, ld_sp_hl, ld_aa16, ei, unk,        unk, cp_d8,    rst_7
 };
 
+void lshift(State* state, uint8_t* v){
+    setCarry(state, ((*v) & 0x80) >> 7);
+    *v = (*v) << 1;
+}
 
-InstructionFn prefixed_instruction_map[0x1] = { nop };
+void rshift(State* state, uint8_t* v){
+    setCarry(state, (*v) & 0x01);
+    *v = (*v) >> 1;
+}
+
+void rshift_retain_b7(State* state, uint8_t* v){
+    uint8_t b7 = (*v) & 0x80;
+    setCarry(state, (*v) & 0x01);
+    *v = (((*v) >> 1) | b7);
+}
+
+void swp(State* state, uint8_t* v){
+    uint8_t l = ((*v) & 0x0F);
+    uint8_t h = ((*v) & 0xF0);
+    *v = ((l << 4) | (h >> 4));
+}
+
+void rlc_a(State* state){
+	(*state->cpu->PC)++;
+	rotlc(state, (state->cpu->A), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rlc_b(State* state){
+	(*state->cpu->PC)++;
+	rotlc(state, (state->cpu->B), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rlc_c(State* state){
+	(*state->cpu->PC)++;
+	rotlc(state, (state->cpu->C), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rlc_d(State* state){
+	(*state->cpu->PC)++;
+	rotlc(state, (state->cpu->D), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rlc_e(State* state){
+	(*state->cpu->PC)++;
+	rotlc(state, (state->cpu->E), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rlc_h(State* state){
+	(*state->cpu->PC)++;
+	rotlc(state, (state->cpu->H), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rlc_l(State* state){
+	(*state->cpu->PC)++;
+	rotlc(state, (state->cpu->L), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rlchl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	rotlc(state, &a, 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void rrc_a(State* state){
+	(*state->cpu->PC)++;
+	rotrc(state, (state->cpu->A), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rrc_b(State* state){
+	(*state->cpu->PC)++;
+	rotrc(state, (state->cpu->B), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rrc_c(State* state){
+	(*state->cpu->PC)++;
+	rotrc(state, (state->cpu->C), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rrc_d(State* state){
+	(*state->cpu->PC)++;
+	rotrc(state, (state->cpu->D), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rrc_e(State* state){
+	(*state->cpu->PC)++;
+	rotrc(state, (state->cpu->E), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rrc_h(State* state){
+	(*state->cpu->PC)++;
+	rotrc(state, (state->cpu->H), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rrc_l(State* state){
+	(*state->cpu->PC)++;
+	rotrc(state, (state->cpu->L), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rrchl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	rotrc(state, &a, 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void rl_a(State* state){
+	(*state->cpu->PC)++;
+	rotl(state, (state->cpu->A), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rl_b(State* state){
+	(*state->cpu->PC)++;
+	rotl(state, (state->cpu->B), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rl_c(State* state){
+	(*state->cpu->PC)++;
+	rotl(state, (state->cpu->C), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rl_d(State* state){
+	(*state->cpu->PC)++;
+	rotl(state, (state->cpu->D), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rl_e(State* state){
+	(*state->cpu->PC)++;
+	rotl(state, (state->cpu->E), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rl_h(State* state){
+	(*state->cpu->PC)++;
+	rotl(state, (state->cpu->H), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rl_l(State* state){
+	(*state->cpu->PC)++;
+	rotl(state, (state->cpu->L), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rlhl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	rotl(state, &a, 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void rr_a(State* state){
+	(*state->cpu->PC)++;
+	rotr(state, (state->cpu->A), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rr_b(State* state){
+	(*state->cpu->PC)++;
+	rotr(state, (state->cpu->B), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rr_c(State* state){
+	(*state->cpu->PC)++;
+	rotr(state, (state->cpu->C), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rr_d(State* state){
+	(*state->cpu->PC)++;
+	rotr(state, (state->cpu->D), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rr_e(State* state){
+	(*state->cpu->PC)++;
+	rotr(state, (state->cpu->E), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rr_h(State* state){
+	(*state->cpu->PC)++;
+	rotr(state, (state->cpu->H), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rr_l(State* state){
+	(*state->cpu->PC)++;
+	rotr(state, (state->cpu->L), 1);
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void rrhl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	rotr(state, &a, 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void sla_a(State* state){
+	(*state->cpu->PC)++;
+	lshift(state, (state->cpu->A));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sla_b(State* state){
+	(*state->cpu->PC)++;
+	lshift(state, (state->cpu->B));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sla_c(State* state){
+	(*state->cpu->PC)++;
+	lshift(state, (state->cpu->C));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sla_d(State* state){
+	(*state->cpu->PC)++;
+	lshift(state, (state->cpu->D));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sla_e(State* state){
+	(*state->cpu->PC)++;
+	lshift(state, (state->cpu->E));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sla_h(State* state){
+	(*state->cpu->PC)++;
+	lshift(state, (state->cpu->H));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sla_l(State* state){
+	(*state->cpu->PC)++;
+	lshift(state, (state->cpu->L));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void slahl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	lshift(state, &a);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void sra_a(State* state){
+	(*state->cpu->PC)++;
+	rshift_retain_b7(state, (state->cpu->A));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sra_b(State* state){
+	(*state->cpu->PC)++;
+	rshift_retain_b7(state, (state->cpu->B));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sra_c(State* state){
+	(*state->cpu->PC)++;
+	rshift_retain_b7(state, (state->cpu->C));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sra_d(State* state){
+	(*state->cpu->PC)++;
+	rshift_retain_b7(state, (state->cpu->D));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sra_e(State* state){
+	(*state->cpu->PC)++;
+	rshift_retain_b7(state, (state->cpu->E));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sra_h(State* state){
+	(*state->cpu->PC)++;
+	rshift_retain_b7(state, (state->cpu->H));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void sra_l(State* state){
+	(*state->cpu->PC)++;
+	rshift_retain_b7(state, (state->cpu->L));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void srahl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	rshift_retain_b7(state, &a);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void swap_a(State* state){
+	(*state->cpu->PC)++;
+	swp(state, (state->cpu->A));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void swap_b(State* state){
+	(*state->cpu->PC)++;
+	swp(state, (state->cpu->B));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void swap_c(State* state){
+	(*state->cpu->PC)++;
+	swp(state, (state->cpu->C));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void swap_d(State* state){
+	(*state->cpu->PC)++;
+	swp(state, (state->cpu->D));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void swap_e(State* state){
+	(*state->cpu->PC)++;
+	swp(state, (state->cpu->E));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void swap_h(State* state){
+	(*state->cpu->PC)++;
+	swp(state, (state->cpu->H));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void swap_l(State* state){
+	(*state->cpu->PC)++;
+	swp(state, (state->cpu->L));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void swaphl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	swp(state, &a);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void srl_a(State* state){
+	(*state->cpu->PC)++;
+	rshift(state, (state->cpu->A));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void srl_b(State* state){
+	(*state->cpu->PC)++;
+	rshift(state, (state->cpu->B));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void srl_c(State* state){
+	(*state->cpu->PC)++;
+	rshift(state, (state->cpu->C));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void srl_d(State* state){
+	(*state->cpu->PC)++;
+	rshift(state, (state->cpu->D));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void srl_e(State* state){
+	(*state->cpu->PC)++;
+	rshift(state, (state->cpu->E));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void srl_h(State* state){
+	(*state->cpu->PC)++;
+	rshift(state, (state->cpu->H));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void srl_l(State* state){
+	(*state->cpu->PC)++;
+	rshift(state, (state->cpu->L));
+	(*state->cpu->PC)++;
+	sleep_cycles(state, 2);
+}
+
+void srlhl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	rshift(state, &a);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_0_a(State* state){
+	setZ(state, ~((*state->cpu->A) & (1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_1_a(State* state){
+	setZ(state, ~((*state->cpu->A) & (1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_2_a(State* state){
+	setZ(state, ~((*state->cpu->A) & (1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_3_a(State* state){
+	setZ(state, ~((*state->cpu->A) & (1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_4_a(State* state){
+	setZ(state, ~((*state->cpu->A) & (1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_5_a(State* state){
+	setZ(state, ~((*state->cpu->A) & (1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_6_a(State* state){
+	setZ(state, ~((*state->cpu->A) & (1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_7_a(State* state){
+	setZ(state, ~((*state->cpu->A) & (1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_0_b(State* state){
+	setZ(state, ~((*state->cpu->B) & (1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_1_b(State* state){
+	setZ(state, ~((*state->cpu->B) & (1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_2_b(State* state){
+	setZ(state, ~((*state->cpu->B) & (1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_3_b(State* state){
+	setZ(state, ~((*state->cpu->B) & (1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_4_b(State* state){
+	setZ(state, ~((*state->cpu->B) & (1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_5_b(State* state){
+	setZ(state, ~((*state->cpu->B) & (1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_6_b(State* state){
+	setZ(state, ~((*state->cpu->B) & (1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_7_b(State* state){
+	setZ(state, ~((*state->cpu->B) & (1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_0_c(State* state){
+	setZ(state, ~((*state->cpu->C) & (1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_1_c(State* state){
+	setZ(state, ~((*state->cpu->C) & (1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_2_c(State* state){
+	setZ(state, ~((*state->cpu->C) & (1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_3_c(State* state){
+	setZ(state, ~((*state->cpu->C) & (1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_4_c(State* state){
+	setZ(state, ~((*state->cpu->C) & (1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_5_c(State* state){
+	setZ(state, ~((*state->cpu->C) & (1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_6_c(State* state){
+	setZ(state, ~((*state->cpu->C) & (1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_7_c(State* state){
+	setZ(state, ~((*state->cpu->C) & (1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_0_d(State* state){
+	setZ(state, ~((*state->cpu->D) & (1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_1_d(State* state){
+	setZ(state, ~((*state->cpu->D) & (1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_2_d(State* state){
+	setZ(state, ~((*state->cpu->D) & (1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_3_d(State* state){
+	setZ(state, ~((*state->cpu->D) & (1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_4_d(State* state){
+	setZ(state, ~((*state->cpu->D) & (1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_5_d(State* state){
+	setZ(state, ~((*state->cpu->D) & (1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_6_d(State* state){
+	setZ(state, ~((*state->cpu->D) & (1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_7_d(State* state){
+	setZ(state, ~((*state->cpu->D) & (1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_0_e(State* state){
+	setZ(state, ~((*state->cpu->E) & (1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_1_e(State* state){
+	setZ(state, ~((*state->cpu->E) & (1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_2_e(State* state){
+	setZ(state, ~((*state->cpu->E) & (1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_3_e(State* state){
+	setZ(state, ~((*state->cpu->E) & (1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_4_e(State* state){
+	setZ(state, ~((*state->cpu->E) & (1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_5_e(State* state){
+	setZ(state, ~((*state->cpu->E) & (1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_6_e(State* state){
+	setZ(state, ~((*state->cpu->E) & (1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_7_e(State* state){
+	setZ(state, ~((*state->cpu->E) & (1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_0_h(State* state){
+	setZ(state, ~((*state->cpu->H) & (1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_1_h(State* state){
+	setZ(state, ~((*state->cpu->H) & (1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_2_h(State* state){
+	setZ(state, ~((*state->cpu->H) & (1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_3_h(State* state){
+	setZ(state, ~((*state->cpu->H) & (1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_4_h(State* state){
+	setZ(state, ~((*state->cpu->H) & (1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_5_h(State* state){
+	setZ(state, ~((*state->cpu->H) & (1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_6_h(State* state){
+	setZ(state, ~((*state->cpu->H) & (1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_7_h(State* state){
+	setZ(state, ~((*state->cpu->H) & (1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_0_l(State* state){
+	setZ(state, ~((*state->cpu->L) & (1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_1_l(State* state){
+	setZ(state, ~((*state->cpu->L) & (1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_2_l(State* state){
+	setZ(state, ~((*state->cpu->L) & (1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_3_l(State* state){
+	setZ(state, ~((*state->cpu->L) & (1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_4_l(State* state){
+	setZ(state, ~((*state->cpu->L) & (1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_5_l(State* state){
+	setZ(state, ~((*state->cpu->L) & (1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_6_l(State* state){
+	setZ(state, ~((*state->cpu->L) & (1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_7_l(State* state){
+	setZ(state, ~((*state->cpu->L) & (1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_0_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	setZ(state, ~(a & (1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_1_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	setZ(state, ~(a & (1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_2_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	setZ(state, ~(a & (1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_3_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	setZ(state, ~(a & (1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_4_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	setZ(state, ~(a & (1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_5_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	setZ(state, ~(a & (1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_6_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	setZ(state, ~(a & (1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void bit_7_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	setZ(state, ~(a & (1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_0_a(State* state){
+	*state->cpu->A &= (~(1 << 0));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_1_a(State* state){
+	*state->cpu->A &= (~(1 << 1));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_2_a(State* state){
+	*state->cpu->A &= (~(1 << 2));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_3_a(State* state){
+	*state->cpu->A &= (~(1 << 3));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_4_a(State* state){
+	*state->cpu->A &= (~(1 << 4));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_5_a(State* state){
+	*state->cpu->A &= (~(1 << 5));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_6_a(State* state){
+	*state->cpu->A &= (~(1 << 6));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_7_a(State* state){
+	*state->cpu->A &= (~(1 << 7));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_0_b(State* state){
+	*state->cpu->B &= (~(1 << 0));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_1_b(State* state){
+	*state->cpu->B &= (~(1 << 1));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_2_b(State* state){
+	*state->cpu->B &= (~(1 << 2));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_3_b(State* state){
+	*state->cpu->B &= (~(1 << 3));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_4_b(State* state){
+	*state->cpu->B &= (~(1 << 4));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_5_b(State* state){
+	*state->cpu->B &= (~(1 << 5));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_6_b(State* state){
+	*state->cpu->B &= (~(1 << 6));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_7_b(State* state){
+	*state->cpu->B &= (~(1 << 7));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_0_c(State* state){
+	*state->cpu->C &= (~(1 << 0));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_1_c(State* state){
+	*state->cpu->C &= (~(1 << 1));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_2_c(State* state){
+	*state->cpu->C &= (~(1 << 2));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_3_c(State* state){
+	*state->cpu->C &= (~(1 << 3));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_4_c(State* state){
+	*state->cpu->C &= (~(1 << 4));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_5_c(State* state){
+	*state->cpu->C &= (~(1 << 5));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_6_c(State* state){
+	*state->cpu->C &= (~(1 << 6));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_7_c(State* state){
+	*state->cpu->C &= (~(1 << 7));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_0_d(State* state){
+	*state->cpu->D &= (~(1 << 0));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_1_d(State* state){
+	*state->cpu->D &= (~(1 << 1));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_2_d(State* state){
+	*state->cpu->D &= (~(1 << 2));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_3_d(State* state){
+	*state->cpu->D &= (~(1 << 3));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_4_d(State* state){
+	*state->cpu->D &= (~(1 << 4));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_5_d(State* state){
+	*state->cpu->D &= (~(1 << 5));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_6_d(State* state){
+	*state->cpu->D &= (~(1 << 6));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_7_d(State* state){
+	*state->cpu->D &= (~(1 << 7));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_0_e(State* state){
+	*state->cpu->E &= (~(1 << 0));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_1_e(State* state){
+	*state->cpu->E &= (~(1 << 1));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_2_e(State* state){
+	*state->cpu->E &= (~(1 << 2));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_3_e(State* state){
+	*state->cpu->E &= (~(1 << 3));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_4_e(State* state){
+	*state->cpu->E &= (~(1 << 4));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_5_e(State* state){
+	*state->cpu->E &= (~(1 << 5));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_6_e(State* state){
+	*state->cpu->E &= (~(1 << 6));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_7_e(State* state){
+	*state->cpu->E &= (~(1 << 7));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_0_h(State* state){
+	*state->cpu->H &= (~(1 << 0));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_1_h(State* state){
+	*state->cpu->H &= (~(1 << 1));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_2_h(State* state){
+	*state->cpu->H &= (~(1 << 2));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_3_h(State* state){
+	*state->cpu->H &= (~(1 << 3));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_4_h(State* state){
+	*state->cpu->H &= (~(1 << 4));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_5_h(State* state){
+	*state->cpu->H &= (~(1 << 5));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_6_h(State* state){
+	*state->cpu->H &= (~(1 << 6));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_7_h(State* state){
+	*state->cpu->H &= (~(1 << 7));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_0_l(State* state){
+	*state->cpu->L &= (~(1 << 0));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_1_l(State* state){
+	*state->cpu->L &= (~(1 << 1));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_2_l(State* state){
+	*state->cpu->L &= (~(1 << 2));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_3_l(State* state){
+	*state->cpu->L &= (~(1 << 3));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_4_l(State* state){
+	*state->cpu->L &= (~(1 << 4));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_5_l(State* state){
+	*state->cpu->L &= (~(1 << 5));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_6_l(State* state){
+	*state->cpu->L &= (~(1 << 6));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_7_l(State* state){
+	*state->cpu->L &= (~(1 << 7));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_0_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a & (~(1 << 0)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_1_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a & (~(1 << 1)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_2_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a & (~(1 << 2)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_3_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a & (~(1 << 3)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_4_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a & (~(1 << 4)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_5_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a & (~(1 << 5)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_6_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a & (~(1 << 6)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void res_7_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a & (~(1 << 7)));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_0_a(State* state){
+	*state->cpu->A |= (1 << 0);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_1_a(State* state){
+	*state->cpu->A |= (1 << 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_2_a(State* state){
+	*state->cpu->A |= (1 << 2);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_3_a(State* state){
+	*state->cpu->A |= (1 << 3);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_4_a(State* state){
+	*state->cpu->A |= (1 << 4);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_5_a(State* state){
+	*state->cpu->A |= (1 << 5);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_6_a(State* state){
+	*state->cpu->A |= (1 << 6);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_7_a(State* state){
+	*state->cpu->A |= (1 << 7);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_0_b(State* state){
+	*state->cpu->B |= (1 << 0);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_1_b(State* state){
+	*state->cpu->B |= (1 << 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_2_b(State* state){
+	*state->cpu->B |= (1 << 2);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_3_b(State* state){
+	*state->cpu->B |= (1 << 3);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_4_b(State* state){
+	*state->cpu->B |= (1 << 4);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_5_b(State* state){
+	*state->cpu->B |= (1 << 5);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_6_b(State* state){
+	*state->cpu->B |= (1 << 6);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_7_b(State* state){
+	*state->cpu->B |= (1 << 7);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_0_c(State* state){
+	*state->cpu->C |= (1 << 0);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_1_c(State* state){
+	*state->cpu->C |= (1 << 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_2_c(State* state){
+	*state->cpu->C |= (1 << 2);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_3_c(State* state){
+	*state->cpu->C |= (1 << 3);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_4_c(State* state){
+	*state->cpu->C |= (1 << 4);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_5_c(State* state){
+	*state->cpu->C |= (1 << 5);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_6_c(State* state){
+	*state->cpu->C |= (1 << 6);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_7_c(State* state){
+	*state->cpu->C |= (1 << 7);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_0_d(State* state){
+	*state->cpu->D |= (1 << 0);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_1_d(State* state){
+	*state->cpu->D |= (1 << 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_2_d(State* state){
+	*state->cpu->D |= (1 << 2);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_3_d(State* state){
+	*state->cpu->D |= (1 << 3);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_4_d(State* state){
+	*state->cpu->D |= (1 << 4);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_5_d(State* state){
+	*state->cpu->D |= (1 << 5);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_6_d(State* state){
+	*state->cpu->D |= (1 << 6);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_7_d(State* state){
+	*state->cpu->D |= (1 << 7);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_0_e(State* state){
+	*state->cpu->E |= (1 << 0);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_1_e(State* state){
+	*state->cpu->E |= (1 << 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_2_e(State* state){
+	*state->cpu->E |= (1 << 2);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_3_e(State* state){
+	*state->cpu->E |= (1 << 3);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_4_e(State* state){
+	*state->cpu->E |= (1 << 4);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_5_e(State* state){
+	*state->cpu->E |= (1 << 5);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_6_e(State* state){
+	*state->cpu->E |= (1 << 6);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_7_e(State* state){
+	*state->cpu->E |= (1 << 7);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_0_h(State* state){
+	*state->cpu->H |= (1 << 0);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_1_h(State* state){
+	*state->cpu->H |= (1 << 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_2_h(State* state){
+	*state->cpu->H |= (1 << 2);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_3_h(State* state){
+	*state->cpu->H |= (1 << 3);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_4_h(State* state){
+	*state->cpu->H |= (1 << 4);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_5_h(State* state){
+	*state->cpu->H |= (1 << 5);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_6_h(State* state){
+	*state->cpu->H |= (1 << 6);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_7_h(State* state){
+	*state->cpu->H |= (1 << 7);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_0_l(State* state){
+	*state->cpu->L |= (1 << 0);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_1_l(State* state){
+	*state->cpu->L |= (1 << 1);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_2_l(State* state){
+	*state->cpu->L |= (1 << 2);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_3_l(State* state){
+	*state->cpu->L |= (1 << 3);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_4_l(State* state){
+	*state->cpu->L |= (1 << 4);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_5_l(State* state){
+	*state->cpu->L |= (1 << 5);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_6_l(State* state){
+	*state->cpu->L |= (1 << 6);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_7_l(State* state){
+	*state->cpu->L |= (1 << 7);
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_0_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a | (1 << 0));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_1_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a | (1 << 1));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_2_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a | (1 << 2));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_3_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a | (1 << 3));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_4_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a | (1 << 4));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_5_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a | (1 << 5));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_6_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a | (1 << 6));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+void set_7_hl(State* state){
+	uint8_t a = mm_read(state, *state->cpu->HL);
+	mm_write(state, *state->cpu->HL, a | (1 << 7));
+	(*state->cpu->PC) += 2;
+	sleep_cycles(state, 2);
+}
+
+InstructionFn prefixed_instruction_map[0x100] = {
+    rlc_b, rlc_c, rlc_d, rlc_e, rlc_h, rlc_l, rlchl, rlc_a, rrc_b, rrc_c, rrc_d, rrc_e, rrc_h, rrc_l, rrchl, rrc_a,
+    rl_b, rl_c, rl_d, rl_e, rl_h, rl_l, rlhl, rl_a, rr_b, rr_c, rr_d, rr_e, rr_h, rr_l, rrhl, rr_a,
+    sla_b, sla_c, sla_d, sla_e, sla_h, sla_l, slahl, sla_a, sra_b, sra_c, sra_d, sra_e, sra_h, sra_l, srahl, sra_a,
+    swap_b, swap_c, swap_d, swap_e, swap_h, swap_l, swaphl, swap_a, srl_b, srl_c, srl_d, srl_e, srl_h, srl_l, srlhl, srl_a,
+    bit_0_b, bit_0_c, bit_0_d, bit_0_e, bit_0_h, bit_0_l, bit_0_hl, bit_0_a, bit_1_b, bit_1_c, bit_1_d, bit_1_e, bit_1_h, bit_1_l, bit_1_hl, bit_1_a,
+    bit_2_b, bit_2_c, bit_2_d, bit_2_e, bit_2_h, bit_2_l, bit_2_hl, bit_2_a, bit_3_b, bit_3_c, bit_3_d, bit_3_e, bit_3_h, bit_3_l, bit_3_hl, bit_3_a,
+    bit_4_b, bit_4_c, bit_4_d, bit_4_e, bit_4_h, bit_4_l, bit_4_hl, bit_4_a, bit_5_b, bit_5_c, bit_5_d, bit_5_e, bit_5_h, bit_5_l, bit_5_hl, bit_5_a,
+    bit_6_b, bit_6_c, bit_6_d, bit_6_e, bit_6_h, bit_6_l, bit_6_hl, bit_6_a, bit_7_b, bit_7_c, bit_7_d, bit_7_e, bit_7_h, bit_7_l, bit_7_hl, bit_7_a,
+    res_0_b, res_0_c, res_0_d, res_0_e, res_0_h, res_0_l, res_0_hl, res_0_a, res_1_b, res_1_c, res_1_d, res_1_e, res_1_h, res_1_l, res_1_hl, res_1_a,
+    res_2_b, res_2_c, res_2_d, res_2_e, res_2_h, res_2_l, res_2_hl, res_2_a, res_3_b, res_3_c, res_3_d, res_3_e, res_3_h, res_3_l, res_3_hl, res_3_a,
+    res_4_b, res_4_c, res_4_d, res_4_e, res_4_h, res_4_l, res_4_hl, res_4_a, res_5_b, res_5_c, res_5_d, res_5_e, res_5_h, res_5_l, res_5_hl, res_5_a,
+    res_6_b, res_6_c, res_6_d, res_6_e, res_6_h, res_6_l, res_6_hl, res_6_a, res_7_b, res_7_c, res_7_d, res_7_e, res_7_h, res_7_l, res_7_hl, res_7_a,
+    set_0_b, set_0_c, set_0_d, set_0_e, set_0_h, set_0_l, set_0_hl, set_0_a, set_1_b, set_1_c, set_1_d, set_1_e, set_1_h, set_1_l, set_1_hl, set_1_a,
+    set_2_b, set_2_c, set_2_d, set_2_e, set_2_h, set_2_l, set_2_hl, set_2_a, set_3_b, set_3_c, set_3_d, set_3_e, set_3_h, set_3_l, set_3_hl, set_3_a,
+    set_4_b, set_4_c, set_4_d, set_4_e, set_4_h, set_4_l, set_4_hl, set_4_a, set_5_b, set_5_c, set_5_d, set_5_e, set_5_h, set_5_l, set_5_hl, set_5_a,
+    set_6_b, set_6_c, set_6_d, set_6_e, set_6_h, set_6_l, set_6_hl, set_6_a, set_7_b, set_7_c, set_7_d, set_7_e, set_7_h, set_7_l, set_7_hl, set_7_a
+};
